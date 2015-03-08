@@ -6,3 +6,6 @@
 *.out
 *.txt
 *.xml
+*.properties
+*.html
+

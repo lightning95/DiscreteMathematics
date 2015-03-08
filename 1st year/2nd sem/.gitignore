@@ -1,8 +1,11 @@
-/.out/*
-/.idea/*
+/.out
+/.idea
 *.class
 *.iml
 *.in
 *.out
 *.txt
 *.xml
+*.properties
+*.html
+
