@@ -7,4 +7,5 @@
 *.txt
 *.xml
 *.properties
-
+*.html
+*.name
