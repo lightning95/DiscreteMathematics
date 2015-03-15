@@ -1,0 +1,1 @@
+http://neerc.ifmo.ru/~sta/2014-2015/2-algorithms/09-lab-subword-search.pdf
