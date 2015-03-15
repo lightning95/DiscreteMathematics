@@ -82,7 +82,7 @@ public class ProbG {
         Vertex link;
         Vertex nLeaf;
         int pCh;
-        int leaf = -1;
+        int id = -1;
 
         Vertex(boolean root) {
             if (root) {
@@ -114,7 +114,7 @@ public class ProbG {
             }
             cur = cur.next[id];
         }
-        cur.leaf = leaf;
+        cur.id = leaf;
     }
 
     Vertex getLink(Vertex v) {
@@ -142,7 +142,7 @@ public class ProbG {
     Vertex findNearestLeaf(Vertex cur) {
         if (cur.nLeaf == null) {
             cur.nLeaf = findNearestLeaf(getLink(cur));
-            if (cur.leaf >= 0) {
+            if (cur.id >= 0) {
                 return cur;
             }
         }
@@ -166,8 +166,8 @@ public class ProbG {
             cur = go(cur, id);
 
             Vertex leaf = findNearestLeaf(cur);
-            while (leaf.leaf >= 0 && !ans[leaf.leaf]) {
-                ans[leaf.leaf] = true;
+            while (leaf.id >= 0 && !ans[leaf.id]) {
+                ans[leaf.id] = true;
                 leaf = leaf.nLeaf;
             }
         }
