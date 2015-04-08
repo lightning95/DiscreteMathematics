@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 public class ProbG {
@@ -82,7 +83,7 @@ public class ProbG {
         Vertex link;
         Vertex nLeaf;
         int pCh;
-        int id = -1;
+        ArrayList<Integer> ids;
 
         Vertex(boolean root) {
             if (root) {
@@ -114,7 +115,10 @@ public class ProbG {
             }
             cur = cur.next[id];
         }
-        cur.id = leaf;
+        if (cur.ids == null) {
+            cur.ids = new ArrayList<>();
+        }
+        cur.ids.add(leaf);
     }
 
     Vertex getLink(Vertex v) {
@@ -142,7 +146,7 @@ public class ProbG {
     Vertex findNearestLeaf(Vertex cur) {
         if (cur.nLeaf == null) {
             cur.nLeaf = findNearestLeaf(getLink(cur));
-            if (cur.id >= 0) {
+            if (cur.ids != null) {
                 return cur;
             }
         }
@@ -166,8 +170,10 @@ public class ProbG {
             cur = go(cur, id);
 
             Vertex leaf = findNearestLeaf(cur);
-            while (leaf.id >= 0 && !ans[leaf.id]) {
-                ans[leaf.id] = true;
+            while (leaf.ids != null && !ans[leaf.ids.get(0)]) {
+                for (int x : leaf.ids) {
+                    ans[x] = true;
+                }
                 leaf = leaf.nLeaf;
             }
         }
