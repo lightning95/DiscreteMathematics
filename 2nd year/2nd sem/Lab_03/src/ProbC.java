@@ -48,10 +48,6 @@ public class ProbC {
             return Integer.parseInt(next());
         }
 
-        long nextLong() {
-            return Long.parseLong(next());
-        }
-
         void println() {
             out.println();
         }
@@ -82,16 +78,6 @@ public class ProbC {
         rw = new RW("matching.in", "matching.out");
         solve();
         rw.close();
-    }
-
-    class Edge {
-        int u;
-        int v;
-
-        Edge(int u, int v) {
-            this.u = u;
-            this.v = v;
-        }
     }
 
     List<Integer>[] edges;
