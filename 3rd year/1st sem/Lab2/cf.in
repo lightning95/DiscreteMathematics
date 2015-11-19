@@ -1,0 +1,21 @@
+12 S
+S -> AbCdE
+A ->
+A -> lol
+A -> a
+B -> gde
+C ->
+C -> lol
+C -> c
+D -> a
+E ->
+E -> lol
+E -> e
+abcde
+
+4 S
+S -> AbCE
+C ->
+A ->
+E ->
+b
