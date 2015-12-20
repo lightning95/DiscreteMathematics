@@ -96,7 +96,11 @@ public class ProbA {
 
         DSU(int n) {
             root = new int[n];
-            for (int i = 0; i < n; ++i) {
+            refresh();
+        }
+
+        void refresh() {
+            for (int i = 0; i < root.length; ++i) {
                 root[i] = i;
             }
         }
@@ -125,108 +129,110 @@ public class ProbA {
         int m = rw.nextInt();
 
         Edge[] allEdges = new Edge[m];
-
-        for (int i = 0; i < m; ++i) {
-            int u = rw.nextInt() - 1;
-            int v = rw.nextInt() - 1;
-            int c = rw.nextInt() - 1;
-            allEdges[i] = new Edge(u, v, c, i);
+        {
+            final int[] id = {0};
+            Arrays.setAll(allEdges, edge -> new Edge(rw.nextInt() - 1, rw.nextInt() - 1, rw.nextInt() - 1, id[0]++));
         }
 
         DSU dsu = new DSU(n);
-        boolean[] used = new boolean[100];
-        List<Edge> ind = new ArrayList<>();
-        boolean[] in = new boolean[m];
+        boolean[] usedColor = new boolean[100];
+        List<Edge> curInd = new ArrayList<>();
+        boolean[] inInd = new boolean[m];
 
         for (Edge e : allEdges) {
-            if (!used[e.c] && dsu.tryUnion(e.u, e.v)) {
-                used[e.c] = true;
-                ind.add(e);
-                in[e.id] = true;
+            if (!usedColor[e.c] && dsu.tryUnion(e.u, e.v)) {
+                usedColor[e.c] = true;
+                curInd.add(e);
+                inInd[e.id] = true;
             }
         }
+        List<Edge>[] rEdges = new ArrayList[m];
+        Arrays.setAll(rEdges, i -> new ArrayList());
 
-        main:
+        DSU curDsu = new DSU(n);
+        int[] d = new int[m];
+        int[] prev = new int[m];
+        Queue<Integer> q = new ArrayDeque<>();
+        List<Edge> newInd;
         for (; ; ) {
             // graph of replacements
-            List<Edge>[] rEdges = new ArrayList[m];
-            for (int i = 0; i < m; ++i) {
-                rEdges[i] = new ArrayList<>();
-            }
+            Arrays.stream(rEdges).forEach(List::clear);
+            for (int i = 0; i < curInd.size(); i++) {
+                Edge edge = curInd.get(i); // I
+                inInd[edge.id] = false;
+                usedColor[edge.c] = false;
 
-            for (int i = 0; i < ind.size(); i++) {
-                Edge edge = ind.get(i); // I
-                in[edge.id] = false;
-
-                DSU curDsu = new DSU(n);
-                for (int j = 0; j < ind.size(); ++j) {
+                curDsu.refresh();
+                for (int j = 0; j < curInd.size(); ++j) {
                     if (i != j) {
-                        curDsu.tryUnion(ind.get(j).u, ind.get(j).v);
+                        curDsu.tryUnion(curInd.get(j).u, curInd.get(j).v);
                     }
                 }
 
                 for (Edge e : allEdges) {
-                    if (curDsu.canUnion(e.u, e.v)) {
+                    if (inInd[e.id] || e.id == edge.id) {
+                        continue;
+                    }
+                    if (curDsu.canUnion(e.u, e.v)) { // ->
                         rEdges[edge.id].add(new Edge(edge.id, e.id, 0, 0));
                     }
-                    used[edge.c] = false;
-                    if (!used[e.c]) {
+                    if (!usedColor[e.c]) { // <-
                         rEdges[e.id].add(new Edge(e.id, edge.id, 0, 0));
                     }
-                    used[edge.c] = true;
                 }
-                in[edge.id] = true;
+                inInd[edge.id] = true;
+                usedColor[edge.c] = true;
             }
 
             // x1 to queue
-            Queue<Integer> q = new ArrayDeque<>();
-            int[] d = new int[m];
+            q.clear();
             Arrays.fill(d, Integer.MAX_VALUE);
             for (Edge e : allEdges) {
-                if (!in[e.id] && dsu.canUnion(e.u, e.v)) {
+                if (!inInd[e.id] && dsu.canUnion(e.u, e.v)) {
                     q.add(e.id);
                     d[e.id] = 0;
                 }
             }
 
-            int[] prev = new int[m];
             Arrays.fill(prev, -1);
             for (; !q.isEmpty(); ) {
                 int u = q.poll();
-                for (Edge e : rEdges[u]) {
-                    if (!in[e.v] && !used[allEdges[e.v].c]) {
-                        // shortest path to X2 is found
-                        List<Edge> newC = new ArrayList<>();
-                        for (int cur = e.v; cur != -1; cur = prev[cur]) {
-                            if (!in[cur]) {
-                                newC.add(allEdges[cur]);
-                                in[cur] = true;
-                            } else if (in[cur]) {
-                                in[cur] = false;
-                            }
-                        }
-                        ind.stream().filter(edge -> !in[edge.id]).forEach(edge -> {
-                            newC.add(edge);
-                            in[edge.id] = true;
-                        });
-                        ind = newC;
-
-                        continue main;
-                    }
-                    if (d[u] + 1 < d[e.v]) {
-                        d[e.v] = d[u] + 1;
-                        prev[e.v] = u;
-                        q.add(e.v);
-                    }
-                }
+                rEdges[u].stream().filter(e -> d[u] + 1 < d[e.v]).forEach(e -> {
+                    d[e.v] = d[u] + 1;
+                    prev[e.v] = u;
+                    q.add(e.v);
+                });
             }
 
-            // shortest path P isn't found
-            break;
+            int id = -1;
+            for (int i = 0; i < m; ++i) {
+                if (d[i] < Integer.MAX_VALUE && !inInd[i] && !usedColor[allEdges[i].c]
+                        && (id == -1 || d[id] > d[i])) {
+                    id = i;
+                }
+            }
+            // shortest path isn't found
+            if (id == -1) {
+                break;
+            }
+            // shortest path to X2 is found
+            newInd = new ArrayList<>();
+            for (int cur = id; cur != -1; cur = prev[cur]) {
+                if (!inInd[cur]) {
+                    newInd.add(allEdges[cur]);
+                    inInd[cur] = true;
+                } else if (inInd[cur]) {
+                    inInd[cur] = false;
+                }
+            }
+            curInd.stream().filter(edge -> inInd[edge.id]).forEach(newInd::add);
+            curInd = newInd;
+            curDsu.refresh();
+            curInd.forEach(e -> dsu.tryUnion(e.u, e.v));
         }
 
-        rw.println(ind.size());
-        ind.stream().forEach(e -> rw.print(e.id + 1 + " "));
+        rw.println(curInd.size());
+        curInd.stream().forEach(e -> rw.print(e.id + 1 + " "));
         rw.println();
     }
 }
